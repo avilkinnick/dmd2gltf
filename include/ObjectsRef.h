@@ -1,7 +1,7 @@
 #ifndef OBJECTS_REF_H
 #define OBJECTS_REF_H
 
-#include <iostream>
+#include <istream>
 #include <set>
 #include <string>
 #include <string_view>

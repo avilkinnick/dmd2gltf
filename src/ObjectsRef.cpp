@@ -1,7 +1,7 @@
 #include "ObjectsRef.h"
 
 #include <fstream>
-#include <iostream>
+#include <istream>
 #include <stdexcept>
 #include <string>
 #include <string_view>
