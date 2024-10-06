@@ -1,6 +1,10 @@
 #include "Application.h"
 
 #include <stdexcept>
+#include <string>
+
+#include "cmake_defines.h"
+#include "DmdRoute.h"
 
 Application::Application(int argc, char* argv[])
 {
@@ -20,4 +24,6 @@ Application::Application(int argc, char* argv[])
 
 void Application::run()
 {
+    auto full_dmd_route_path { std::string { DMD_ROUTES_DIR } + '/' + route_name.data() };
+    DmdRoute dmd_route { full_dmd_route_path };
 }
