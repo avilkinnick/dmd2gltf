@@ -20,6 +20,7 @@ private:
 
 class ObjectsRef::Element
 {
+public:
     std::string label {};
     std::string relative_dmd_path {};
     std::string relative_texture_path {};
