@@ -24,6 +24,6 @@ Application::Application(int argc, char* argv[])
 
 void Application::run()
 {
-    const auto full_dmd_route_path { std::string { DMD_ROUTES_DIR } + '/' + route_name.data() };
+    const std::string full_dmd_route_path { std::string { DMD_ROUTES_DIR } + '/' + route_name.data() };
     const DmdRoute dmd_route { full_dmd_route_path };
 }

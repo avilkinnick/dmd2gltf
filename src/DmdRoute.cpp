@@ -6,5 +6,5 @@
 
 DmdRoute::DmdRoute(std::string_view full_dmd_route_path)
 {
-    ObjectsRef objects_ref { full_dmd_route_path };
+    ObjectsRef objects_ref { full_dmd_route_path.data() };
 }
