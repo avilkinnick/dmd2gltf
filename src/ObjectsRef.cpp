@@ -14,68 +14,7 @@
 // TODO: split on several functions
 ObjectsRef::ObjectsRef(const std::string& full_dmd_route_path)
 {
-    std::ifstream file { full_dmd_route_path + "/objects.ref" };
-    if (!file)
-    {
-        throw std::runtime_error { "Failed to open objects.ref" };
-    }
-
-    bool mipmap { false };
-    bool smooth { false };
-
-    std::string line {};
-    while (std::getline(file, line))
-    {
-        if (line.empty())
-        {
-            continue;
-        }
-        else if (line.front() == '[')
-        {
-            if (line == "[mipmap]")
-            {
-                mipmap = true;
-            }
-            else if (line == "[not_mipmap]")
-            {
-                mipmap = false;
-            }
-            else if (line == "[smooth]")
-            {
-                smooth = true;
-            }
-            else if (line == "[not_smooth]")
-            {
-                smooth = false;
-            }
-        }
-        else
-        {
-            std::string label {};
-            std::string relative_dmd_path {};
-            std::string relative_texture_path {};
-
-            std::istringstream line_stream { line };
-            line_stream >> label >> relative_dmd_path >> relative_texture_path;
-
-            if (!relative_texture_path.empty()
-                && !is_slash(label.front())
-                && is_slash(relative_dmd_path.front())
-                && is_slash(relative_texture_path.front()))
-            {
-                elements.emplace(Element {
-                    std::move(label),
-                    std::move(relative_dmd_path),
-                    std::move(relative_texture_path),
-                    mipmap,
-                    smooth
-                });
-            }
-        }
-    }
-
-    std::set<std::string_view> unique_relative_dmd_paths {};
-    std::set<std::string_view> unique_relative_texture_paths {};
+    parse_objects_ref(open_objects_ref(full_dmd_route_path));
 
     for (const auto& element : elements)
     {
@@ -158,5 +97,83 @@ ObjectsRef::ObjectsRef(const std::string& full_dmd_route_path)
 
         erase_missing2(unique_relative_dmd_paths, SetType::dmd);
         erase_missing2(unique_relative_texture_paths, SetType::texture);
+    }
+}
+
+std::ifstream ObjectsRef::open_objects_ref(const std::string& full_dmd_route_path)
+{
+    std::ifstream objects_ref { full_dmd_route_path + "/objects.ref" };
+    if (!objects_ref)
+    {
+        throw std::runtime_error { "Failed to open objects.ref" };
+    }
+
+    return objects_ref;
+}
+
+void ObjectsRef::parse_objects_ref(std::ifstream&& objects_ref)
+{
+    bool mipmap { false };
+    bool smooth { false };
+
+    std::string line {};
+    while (std::getline(objects_ref, line))
+    {
+        if (line.empty())
+        {
+            continue;
+        }
+        else if (line.front() == '[')
+        {
+            parse_property(line, mipmap, smooth);
+        }
+        else
+        {
+            parse_line(line, mipmap, smooth);
+        }
+    }
+}
+
+void ObjectsRef::parse_property(std::string_view line, bool& mipmap, bool& smooth) const noexcept
+{
+    if (line == "[mipmap]")
+    {
+        mipmap = true;
+    }
+    else if (line == "[not_mipmap]")
+    {
+        mipmap = false;
+    }
+    else if (line == "[smooth]")
+    {
+        smooth = true;
+    }
+    else if (line == "[not_smooth]")
+    {
+        smooth = false;
+    }
+}
+
+void ObjectsRef::parse_line(std::string_view line, bool mipmap, bool smooth)
+{
+    std::string label {};
+    std::string relative_dmd_path {};
+    std::string relative_texture_path {};
+
+    std::istringstream line_stream { line.data() };
+    line_stream >> label >> relative_dmd_path >> relative_texture_path;
+
+    if (!relative_texture_path.empty()
+        && !is_slash(label.front())
+        && is_slash(relative_dmd_path.front())
+        && is_slash(relative_texture_path.front()))
+    {
+        elements.emplace(Element {
+            std::move(label),
+            std::move(relative_dmd_path),
+            std::move(relative_texture_path),
+            mipmap,
+            smooth
+        });
     }
 }
