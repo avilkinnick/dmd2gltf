@@ -83,7 +83,7 @@ ObjectsRef::ObjectsRef(const std::string& full_dmd_route_path)
         unique_relative_texture_paths.emplace(element.relative_texture_path);
     }
 
-    const auto erase_missing1 { [&full_dmd_route_path](std::set<std::string_view>& unique_relative_paths) {
+    auto erase_missing1 { [&full_dmd_route_path](std::set<std::string_view>& unique_relative_paths) {
         for (auto it { unique_relative_paths.begin() }; it != unique_relative_paths.end();)
         {
             if (!std::ifstream { full_dmd_route_path + it->data() })
@@ -131,7 +131,7 @@ ObjectsRef::ObjectsRef(const std::string& full_dmd_route_path)
             texture
         };
 
-        const auto erase_missing2 { [this, &erased](std::set<std::string_view>& unique_relative_paths, SetType type) {
+        auto erase_missing2 { [this, &erased](std::set<std::string_view>& unique_relative_paths, SetType type) {
             for (auto it { unique_relative_paths.begin() }; it != unique_relative_paths.end();)
             {
                 bool found { false };
