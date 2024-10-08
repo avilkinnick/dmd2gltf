@@ -29,8 +29,11 @@ void ObjectsRef::erase_redundant_elements()
         bool erased { false };
         for (auto it { elements.begin() }; it != elements.end();)
         {
-            if (unique_relative_dmd_paths.find(it->relative_dmd_path) == unique_relative_dmd_paths.end()
-                || unique_relative_texture_paths.find(it->relative_texture_path) == unique_relative_texture_paths.end())
+            const std::string& relative_dmd_path { it->second.relative_dmd_path };
+            const std::string& relative_texture_path { it->second.relative_texture_path };
+
+            if (unique_relative_dmd_paths.find(relative_dmd_path) == unique_relative_dmd_paths.end()
+                || unique_relative_texture_paths.find(relative_texture_path) == unique_relative_texture_paths.end())
             {
                 it = elements.erase(it);
                 erased = true;
@@ -41,16 +44,10 @@ void ObjectsRef::erase_redundant_elements()
             }
         }
 
-        if (!erased)
-        {
-            break;
-        }
-
-        erased = false;
         for (auto it { unique_relative_dmd_paths.begin() }; it != unique_relative_dmd_paths.end();)
         {
             bool found { false };
-            for (const auto& element : elements)
+            for (const auto& [label, element] : elements)
             {
                 if (*it == element.relative_dmd_path)
                 {
@@ -73,7 +70,7 @@ void ObjectsRef::erase_redundant_elements()
         for (auto it { unique_relative_texture_paths.begin() }; it != unique_relative_texture_paths.end();)
         {
             bool found { false };
-            for (const auto& element : elements)
+            for (const auto& [label, element] : elements)
             {
                 if (*it == element.relative_texture_path)
                 {
@@ -155,13 +152,15 @@ void ObjectsRef::parse_line(std::string_view line, bool& mipmap, bool& smooth)
             std::replace(relative_dmd_path.begin(), relative_dmd_path.end(), '\\', '/');
             std::replace(relative_texture_path.begin(), relative_texture_path.end(), '\\', '/');
 
-            elements.emplace(Element {
+            elements.emplace(
                 std::move(label),
-                std::move(relative_dmd_path),
-                std::move(relative_texture_path),
-                mipmap,
-                smooth
-            });
+                Element {
+                    std::move(relative_dmd_path),
+                    std::move(relative_texture_path),
+                    mipmap,
+                    smooth
+                }
+            );
         }
     }
 }
@@ -188,7 +187,7 @@ void ObjectsRef::parse_property(std::string_view line, bool& mipmap, bool& smoot
 
 void ObjectsRef::fill_unique_relative_paths()
 {
-    for (const auto& element : elements)
+    for (const auto& [label, element] : elements)
     {
         unique_relative_dmd_paths.emplace(element.relative_dmd_path);
         unique_relative_texture_paths.emplace(element.relative_texture_path);
@@ -196,7 +195,7 @@ void ObjectsRef::fill_unique_relative_paths()
 }
 
 void ObjectsRef::erase_invalid_paths(
-    std::set<std::string_view>& unique_relative_paths,
+    std::set<std::string>& unique_relative_paths,
     const std::string& full_dmd_route_path)
 {
     for (auto it { unique_relative_paths.begin() }; it != unique_relative_paths.end();)

@@ -2,6 +2,7 @@
 #define OBJECTS_REF_H
 
 #include <fstream>
+#include <map>
 #include <set>
 #include <string>
 #include <string_view>
@@ -9,7 +10,7 @@
 class ObjectsRef
 {
 public:
-    class Element;
+    struct Element;
 
 public:
     explicit ObjectsRef(const std::string& full_dmd_route_path);
@@ -24,25 +25,24 @@ private:
 
     void fill_unique_relative_paths();
     void erase_invalid_paths(
-        std::set<std::string_view>& unique_relative_paths,
+        std::set<std::string>& unique_relative_paths,
         const std::string& full_dmd_route_path);
 
 private:
-    std::set<Element> elements {};
-    std::set<std::string_view> unique_relative_dmd_paths {};
-    std::set<std::string_view> unique_relative_texture_paths {};
+    std::map<std::string, Element> elements {};
+    std::set<std::string> unique_relative_dmd_paths {};
+    std::set<std::string> unique_relative_texture_paths {};
+
+public:
+    friend class RouteMap;
 };
 
-class ObjectsRef::Element
+struct ObjectsRef::Element
 {
-public:
-    const std::string label {};
     const std::string relative_dmd_path {};
     const std::string relative_texture_path {};
     const bool mipmap {};
     const bool smooth {};
-
-    bool operator<(const Element& rhs) const noexcept { return this->label < rhs.label; }
 };
 
 #endif // OBJECTS_REF_H
