@@ -18,8 +18,12 @@ ObjectsRef::ObjectsRef(const std::string& full_dmd_route_path)
     fill_unique_relative_paths();
     erase_invalid_paths(unique_relative_dmd_paths, full_dmd_route_path);
     erase_invalid_paths(unique_relative_texture_paths, full_dmd_route_path);
+    erase_redundant_elements();
+}
 
-    // TODO: refactor
+// TODO: split on several functions
+void ObjectsRef::erase_redundant_elements()
+{
     while (true)
     {
         bool erased { false };
@@ -43,40 +47,56 @@ ObjectsRef::ObjectsRef(const std::string& full_dmd_route_path)
         }
 
         erased = false;
-
-        enum class SetType
+        for (auto it { unique_relative_dmd_paths.begin() }; it != unique_relative_dmd_paths.end();)
         {
-            dmd,
-            texture
-        };
-
-        auto erase_missing2 { [this, &erased](std::set<std::string_view>& unique_relative_paths, SetType type) {
-            for (auto it { unique_relative_paths.begin() }; it != unique_relative_paths.end();)
+            bool found { false };
+            for (const auto& element : elements)
             {
-                bool found { false };
-                for (const auto& element : elements)
+                if (*it == element.relative_dmd_path)
                 {
-                    if (*it == ((type == SetType::dmd) ? element.relative_dmd_path : element.relative_texture_path))
-                    {
-                        found = true;
-                        break;
-                    }
-                }
-
-                if (!found)
-                {
-                    it = unique_relative_paths.erase(it);
-                    erased = true;
-                }
-                else
-                {
-                    ++it;
+                    found = true;
+                    break;
                 }
             }
-        }};
 
-        erase_missing2(unique_relative_dmd_paths, SetType::dmd);
-        erase_missing2(unique_relative_texture_paths, SetType::texture);
+            if (!found)
+            {
+                it = unique_relative_dmd_paths.erase(it);
+                erased = true;
+            }
+            else
+            {
+                ++it;
+            }
+        }
+
+        for (auto it { unique_relative_texture_paths.begin() }; it != unique_relative_texture_paths.end();)
+        {
+            bool found { false };
+            for (const auto& element : elements)
+            {
+                if (*it == element.relative_texture_path)
+                {
+                    found = true;
+                    break;
+                }
+            }
+
+            if (!found)
+            {
+                it = unique_relative_texture_paths.erase(it);
+                erased = true;
+            }
+            else
+            {
+                ++it;
+            }
+        }
+
+        if (!erased)
+        {
+            break;
+        }
     }
 }
 
@@ -101,6 +121,11 @@ void ObjectsRef::parse_objects_ref(std::ifstream&& objects_ref)
     {
         parse_line(line, mipmap, smooth);
     }
+
+    if (elements.empty())
+    {
+        throw std::runtime_error { "Can not find elements in objects.ref" };
+    }
 }
 
 void ObjectsRef::parse_line(std::string_view line, bool& mipmap, bool& smooth)
@@ -122,14 +147,14 @@ void ObjectsRef::parse_line(std::string_view line, bool& mipmap, bool& smooth)
         std::istringstream line_stream { line.data() };
         line_stream >> label >> relative_dmd_path >> relative_texture_path;
 
-        std::replace(relative_dmd_path.begin(), relative_dmd_path.end(), '\\', '/');
-        std::replace(relative_texture_path.begin(), relative_texture_path.end(), '\\', '/');
-
         if (!relative_texture_path.empty()
             && !is_slash(label.front())
             && is_slash(relative_dmd_path.front())
             && is_slash(relative_texture_path.front()))
         {
+            std::replace(relative_dmd_path.begin(), relative_dmd_path.end(), '\\', '/');
+            std::replace(relative_texture_path.begin(), relative_texture_path.end(), '\\', '/');
+
             elements.emplace(Element {
                 std::move(label),
                 std::move(relative_dmd_path),

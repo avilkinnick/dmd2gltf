@@ -14,6 +14,8 @@ public:
 public:
     explicit ObjectsRef(const std::string& full_dmd_route_path);
 
+    void erase_redundant_elements();
+
 private:
     std::ifstream open_objects_ref(std::string_view full_objects_ref_path) const;
     void parse_objects_ref(std::ifstream&& objects_ref);
