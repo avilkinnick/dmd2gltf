@@ -1,5 +1,6 @@
 #include "ObjectsRef.h"
 
+#include <algorithm>
 #include <fstream>
 #include <iostream>
 #include <set>
@@ -11,35 +12,14 @@
 
 #include "string_functions.h"
 
-// TODO: split on several functions
 ObjectsRef::ObjectsRef(const std::string& full_dmd_route_path)
 {
-    parse_objects_ref(open_objects_ref(full_dmd_route_path));
+    parse_objects_ref(open_objects_ref(full_dmd_route_path + "/objects.ref"));
+    fill_unique_relative_paths();
+    erase_invalid_paths(unique_relative_dmd_paths, full_dmd_route_path);
+    erase_invalid_paths(unique_relative_texture_paths, full_dmd_route_path);
 
-    for (const auto& element : elements)
-    {
-        unique_relative_dmd_paths.emplace(element.relative_dmd_path);
-        unique_relative_texture_paths.emplace(element.relative_texture_path);
-    }
-
-    auto erase_missing1 { [&full_dmd_route_path](std::set<std::string_view>& unique_relative_paths) {
-        for (auto it { unique_relative_paths.begin() }; it != unique_relative_paths.end();)
-        {
-            if (!std::ifstream { full_dmd_route_path + it->data() })
-            {
-                std::cout << "Failed to open " << it->data() << '\n';
-                it = unique_relative_paths.erase(it);
-            }
-            else
-            {
-                ++it;
-            }
-        }
-    }};
-
-    erase_missing1(unique_relative_dmd_paths);
-    erase_missing1(unique_relative_texture_paths);
-
+    // TODO: refactor
     while (true)
     {
         bool erased { false };
@@ -100,9 +80,9 @@ ObjectsRef::ObjectsRef(const std::string& full_dmd_route_path)
     }
 }
 
-std::ifstream ObjectsRef::open_objects_ref(const std::string& full_dmd_route_path)
+std::ifstream ObjectsRef::open_objects_ref(std::string_view full_objects_ref_path) const
 {
-    std::ifstream objects_ref { full_dmd_route_path + "/objects.ref" };
+    std::ifstream objects_ref { full_objects_ref_path.data() };
     if (!objects_ref)
     {
         throw std::runtime_error { "Failed to open objects.ref" };
@@ -119,17 +99,44 @@ void ObjectsRef::parse_objects_ref(std::ifstream&& objects_ref)
     std::string line {};
     while (std::getline(objects_ref, line))
     {
-        if (line.empty())
+        parse_line(line, mipmap, smooth);
+    }
+}
+
+void ObjectsRef::parse_line(std::string_view line, bool& mipmap, bool& smooth)
+{
+    if (line.empty())
+    {
+        return;
+    }
+    else if (line.front() == '[')
+    {
+        parse_property(line, mipmap, smooth);
+    }
+    else
+    {
+        std::string label {};
+        std::string relative_dmd_path {};
+        std::string relative_texture_path {};
+
+        std::istringstream line_stream { line.data() };
+        line_stream >> label >> relative_dmd_path >> relative_texture_path;
+
+        std::replace(relative_dmd_path.begin(), relative_dmd_path.end(), '\\', '/');
+        std::replace(relative_texture_path.begin(), relative_texture_path.end(), '\\', '/');
+
+        if (!relative_texture_path.empty()
+            && !is_slash(label.front())
+            && is_slash(relative_dmd_path.front())
+            && is_slash(relative_texture_path.front()))
         {
-            continue;
-        }
-        else if (line.front() == '[')
-        {
-            parse_property(line, mipmap, smooth);
-        }
-        else
-        {
-            parse_line(line, mipmap, smooth);
+            elements.emplace(Element {
+                std::move(label),
+                std::move(relative_dmd_path),
+                std::move(relative_texture_path),
+                mipmap,
+                smooth
+            });
         }
     }
 }
@@ -154,26 +161,29 @@ void ObjectsRef::parse_property(std::string_view line, bool& mipmap, bool& smoot
     }
 }
 
-void ObjectsRef::parse_line(std::string_view line, bool mipmap, bool smooth)
+void ObjectsRef::fill_unique_relative_paths()
 {
-    std::string label {};
-    std::string relative_dmd_path {};
-    std::string relative_texture_path {};
-
-    std::istringstream line_stream { line.data() };
-    line_stream >> label >> relative_dmd_path >> relative_texture_path;
-
-    if (!relative_texture_path.empty()
-        && !is_slash(label.front())
-        && is_slash(relative_dmd_path.front())
-        && is_slash(relative_texture_path.front()))
+    for (const auto& element : elements)
     {
-        elements.emplace(Element {
-            std::move(label),
-            std::move(relative_dmd_path),
-            std::move(relative_texture_path),
-            mipmap,
-            smooth
-        });
+        unique_relative_dmd_paths.emplace(element.relative_dmd_path);
+        unique_relative_texture_paths.emplace(element.relative_texture_path);
+    }
+}
+
+void ObjectsRef::erase_invalid_paths(
+    std::set<std::string_view>& unique_relative_paths,
+    const std::string& full_dmd_route_path)
+{
+    for (auto it { unique_relative_paths.begin() }; it != unique_relative_paths.end();)
+    {
+        if (!std::ifstream { full_dmd_route_path + it->data() })
+        {
+            std::cout << "Failed to open " << it->data() << '\n';
+            it = unique_relative_paths.erase(it);
+        }
+        else
+        {
+            ++it;
+        }
     }
 }

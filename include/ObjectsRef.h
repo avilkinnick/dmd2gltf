@@ -15,10 +15,15 @@ public:
     explicit ObjectsRef(const std::string& full_dmd_route_path);
 
 private:
-    std::ifstream open_objects_ref(const std::string& full_dmd_route_path);
+    std::ifstream open_objects_ref(std::string_view full_objects_ref_path) const;
     void parse_objects_ref(std::ifstream&& objects_ref);
+    void parse_line(std::string_view line, bool& mipmap, bool& smooth);
     void parse_property(std::string_view line, bool& mipmap, bool& smooth) const noexcept;
-    void parse_line(std::string_view line, bool mipmap, bool smooth);
+
+    void fill_unique_relative_paths();
+    void erase_invalid_paths(
+        std::set<std::string_view>& unique_relative_paths,
+        const std::string& full_dmd_route_path);
 
 private:
     std::set<Element> elements {};
