@@ -19,7 +19,7 @@ RouteMap::RouteMap(const std::string& full_dmd_route_path, ObjectsRef& objects_r
     erase_redundant_elements(objects_ref);
 }
 
-std::ifstream RouteMap::open_route_map(std::string_view full_route_map_path)
+std::ifstream RouteMap::open_route_map(std::string_view full_route_map_path) const
 {
     std::ifstream route_map { full_route_map_path.data() };
     if (!route_map)

@@ -21,7 +21,7 @@ public:
     std::multimap<std::string, Transformation> elements {};
 
 private:
-    std::ifstream open_route_map(std::string_view full_route_map_path);
+    std::ifstream open_route_map(std::string_view full_route_map_path) const;
     void parse_route_map(std::ifstream&& route_map, const ObjectsRef& objects_ref);
     void erase_redundant_elements(ObjectsRef& objects_ref);
 };
