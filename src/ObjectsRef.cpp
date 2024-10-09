@@ -19,80 +19,53 @@ ObjectsRef::ObjectsRef(const std::string& full_dmd_route_path)
     erase_invalid_paths(unique_relative_dmd_paths, full_dmd_route_path);
     erase_invalid_paths(unique_relative_texture_paths, full_dmd_route_path);
     erase_redundant_elements();
+    erase_redundant_paths();
 }
 
 // TODO: split on several functions
-void ObjectsRef::erase_redundant_elements()
+void ObjectsRef::erase_redundant_paths()
 {
-    while (true)
+    for (auto it { unique_relative_dmd_paths.begin() }; it != unique_relative_dmd_paths.end();)
     {
-        bool erased { false };
-        for (auto it { elements.begin() }; it != elements.end();)
+        bool found { false };
+        for (const auto& [label, element] : elements)
         {
-            const std::string& relative_dmd_path { it->second.relative_dmd_path };
-            const std::string& relative_texture_path { it->second.relative_texture_path };
-
-            if (unique_relative_dmd_paths.find(relative_dmd_path) == unique_relative_dmd_paths.end()
-                || unique_relative_texture_paths.find(relative_texture_path) == unique_relative_texture_paths.end())
+            if (*it == element.relative_dmd_path)
             {
-                it = elements.erase(it);
-                erased = true;
-            }
-            else
-            {
-                ++it;
+                found = true;
+                break;
             }
         }
 
-        for (auto it { unique_relative_dmd_paths.begin() }; it != unique_relative_dmd_paths.end();)
+        if (!found)
         {
-            bool found { false };
-            for (const auto& [label, element] : elements)
-            {
-                if (*it == element.relative_dmd_path)
-                {
-                    found = true;
-                    break;
-                }
-            }
+            it = unique_relative_dmd_paths.erase(it);
+        }
+        else
+        {
+            ++it;
+        }
+    }
 
-            if (!found)
+    for (auto it { unique_relative_texture_paths.begin() }; it != unique_relative_texture_paths.end();)
+    {
+        bool found { false };
+        for (const auto& [label, element] : elements)
+        {
+            if (*it == element.relative_texture_path)
             {
-                it = unique_relative_dmd_paths.erase(it);
-                erased = true;
-            }
-            else
-            {
-                ++it;
+                found = true;
+                break;
             }
         }
 
-        for (auto it { unique_relative_texture_paths.begin() }; it != unique_relative_texture_paths.end();)
+        if (!found)
         {
-            bool found { false };
-            for (const auto& [label, element] : elements)
-            {
-                if (*it == element.relative_texture_path)
-                {
-                    found = true;
-                    break;
-                }
-            }
-
-            if (!found)
-            {
-                it = unique_relative_texture_paths.erase(it);
-                erased = true;
-            }
-            else
-            {
-                ++it;
-            }
+            it = unique_relative_texture_paths.erase(it);
         }
-
-        if (!erased)
+        else
         {
-            break;
+            ++it;
         }
     }
 }
@@ -204,6 +177,25 @@ void ObjectsRef::erase_invalid_paths(
         {
             std::cout << "Failed to open " << it->data() << '\n';
             it = unique_relative_paths.erase(it);
+        }
+        else
+        {
+            ++it;
+        }
+    }
+}
+
+void ObjectsRef::erase_redundant_elements()
+{
+    for (auto it { elements.begin() }; it != elements.end();)
+    {
+        const std::string& relative_dmd_path { it->second.relative_dmd_path };
+        const std::string& relative_texture_path { it->second.relative_texture_path };
+
+        if (unique_relative_dmd_paths.find(relative_dmd_path) == unique_relative_dmd_paths.end()
+            || unique_relative_texture_paths.find(relative_texture_path) == unique_relative_texture_paths.end())
+        {
+            it = elements.erase(it);
         }
         else
         {

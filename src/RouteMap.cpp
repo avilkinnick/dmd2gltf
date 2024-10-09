@@ -112,5 +112,5 @@ void RouteMap::erase_redundant_elements(ObjectsRef& objects_ref)
         }
     }
 
-    objects_ref.erase_redundant_elements();
+    objects_ref.erase_redundant_paths();
 }

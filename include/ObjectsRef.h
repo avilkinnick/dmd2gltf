@@ -15,7 +15,12 @@ public:
 public:
     explicit ObjectsRef(const std::string& full_dmd_route_path);
 
-    void erase_redundant_elements();
+    void erase_redundant_paths();
+
+public:
+    std::map<std::string, Element> elements {};
+    std::set<std::string> unique_relative_dmd_paths {};
+    std::set<std::string> unique_relative_texture_paths {};
 
 private:
     std::ifstream open_objects_ref(std::string_view full_objects_ref_path) const;
@@ -24,17 +29,13 @@ private:
     void parse_property(std::string_view line, bool& mipmap, bool& smooth) const noexcept;
 
     void fill_unique_relative_paths();
+
     void erase_invalid_paths(
         std::set<std::string>& unique_relative_paths,
-        const std::string& full_dmd_route_path);
+        const std::string& full_dmd_route_path
+    );
 
-private:
-    std::map<std::string, Element> elements {};
-    std::set<std::string> unique_relative_dmd_paths {};
-    std::set<std::string> unique_relative_texture_paths {};
-
-public:
-    friend class RouteMap;
+    void erase_redundant_elements();
 };
 
 struct ObjectsRef::Element
