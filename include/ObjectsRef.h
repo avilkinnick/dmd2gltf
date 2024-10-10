@@ -15,6 +15,7 @@ public:
 public:
     explicit ObjectsRef(const std::string& full_dmd_route_path);
 
+    void erase_redundant_elements();
     void erase_redundant_paths();
 
 public:
@@ -34,8 +35,6 @@ private:
         std::set<std::string>& unique_relative_paths,
         const std::string& full_dmd_route_path
     );
-
-    void erase_redundant_elements();
 };
 
 struct ObjectsRef::Element

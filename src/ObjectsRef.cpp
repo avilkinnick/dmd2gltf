@@ -22,6 +22,25 @@ ObjectsRef::ObjectsRef(const std::string& full_dmd_route_path)
     erase_redundant_paths();
 }
 
+void ObjectsRef::erase_redundant_elements()
+{
+    for (auto it { elements.begin() }; it != elements.end();)
+    {
+        const std::string& relative_dmd_path { it->second.relative_dmd_path };
+        const std::string& relative_texture_path { it->second.relative_texture_path };
+
+        if (unique_relative_dmd_paths.find(relative_dmd_path) == unique_relative_dmd_paths.end()
+            || unique_relative_texture_paths.find(relative_texture_path) == unique_relative_texture_paths.end())
+        {
+            it = elements.erase(it);
+        }
+        else
+        {
+            ++it;
+        }
+    }
+}
+
 // TODO: split on several functions
 void ObjectsRef::erase_redundant_paths()
 {
@@ -177,25 +196,6 @@ void ObjectsRef::erase_invalid_paths(
         {
             std::cout << "Failed to open " << it->data() << '\n';
             it = unique_relative_paths.erase(it);
-        }
-        else
-        {
-            ++it;
-        }
-    }
-}
-
-void ObjectsRef::erase_redundant_elements()
-{
-    for (auto it { elements.begin() }; it != elements.end();)
-    {
-        const std::string& relative_dmd_path { it->second.relative_dmd_path };
-        const std::string& relative_texture_path { it->second.relative_texture_path };
-
-        if (unique_relative_dmd_paths.find(relative_dmd_path) == unique_relative_dmd_paths.end()
-            || unique_relative_texture_paths.find(relative_texture_path) == unique_relative_texture_paths.end())
-        {
-            it = elements.erase(it);
         }
         else
         {
