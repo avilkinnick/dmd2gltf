@@ -17,7 +17,7 @@ public:
 
 private:
     std::vector<Vertex> vertices {};
-    std::vector<unsigned int> indices {};
+    std::vector<int> indices {};
 };
 
 #endif // DMD_MESH_H
