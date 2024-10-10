@@ -15,9 +15,9 @@ public:
     std::ifstream open_dmd_mesh(std::string_view full_dmd_mesh_path) const;
     void parse_dmd_mesh(std::ifstream&& dmd_mesh);
 
-private:
+public:
     std::vector<Vertex> vertices {};
-    std::vector<int> indices {};
+    std::vector<unsigned int> indices {};
 };
 
 #endif // DMD_MESH_H

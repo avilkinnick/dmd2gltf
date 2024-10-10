@@ -141,4 +141,9 @@ void DmdMesh::parse_dmd_mesh(std::ifstream&& dmd_mesh)
     }
 
     vertices.shrink_to_fit();
+
+    if (vertices.empty() || indices.empty())
+    {
+        throw std::runtime_error { "Vertices or indices are empty in" };
+    }
 }

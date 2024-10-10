@@ -7,6 +7,7 @@
 #include <glm/ext/vector_float3.hpp>
 
 #include "DmdMesh.h"
+#include "tiny_gltf.h"
 
 class DmdRoute
 {
@@ -17,7 +18,9 @@ public:
 public:
     explicit DmdRoute(std::string_view full_dmd_route_path);
 
-private:
+    operator tinygltf::Model() const;
+
+public:
     std::vector<DmdMesh> meshes {};
     std::vector<std::string> relative_texture_paths {};
     std::map<std::string, Model> models {};
