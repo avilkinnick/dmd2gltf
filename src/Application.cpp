@@ -65,11 +65,11 @@ void Application::copy_textures(DmdRoute& dmd_route)
         const auto height { image.rows() };
         std::size_t new_width { 1 };
         std::size_t new_height { 1 };
-        while (new_width < width)
+        while (new_width < width && new_width < 256)
         {
             new_width *= 2;
         }
-        while (new_height < height)
+        while (new_height < height && new_height < 256)
         {
             new_height *= 2;
         }
